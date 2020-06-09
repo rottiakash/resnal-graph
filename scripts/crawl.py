@@ -243,46 +243,57 @@ def getCredit(subcode):
         return 0
 
 
-# Mongo Part
-for s in data.find({"done": True}):
-    USN = s["usn"]
-    print("USN:-" + USN)
-    stu = {
-        "usn": USN,
-        "section": s["sec"],
-        "batch": str(int(s["batch"])),
-        "sem": int(s["sem"]),
-    }
+USN = ""
+
+if __name__ == "__main__":
     try:
-        stu_id = student.insert_one(stu).inserted_id
-    except:
-        print("Student Data Already Exists")
-        data.update({"_id": s["_id"]}, {"$set": {"done": True}})
-        continue
-    res = getResult(USN, s["sem"])
-    if res == 404:
-        print("USN Invalid")
-        student.remove({"_id": stu_id})
-        data.update({"_id": s["_id"]}, {"$set": {"done": True}})
-        continue
-    else:
-        student.update({"_id": stu_id}, {"$set": {"name": res[0]}})
-        print(res[0])
-        res = res[1:]
-        for r in res:
-            mark = {
-                "sid": str(stu_id),
-                "subjectCode": r["subcode"],
-                "subjectName": r["subname"],
-                "internalMarks": r["ia"],
-                "externalMarks": r["ea"],
-                "totalMarks": r["total"],
-                "result": r["result"],
+        for s in data.find({"done": False}):
+            USN = s["usn"]
+            print("USN:-" + USN)
+            stu = {
+                "usn": USN,
+                "section": s["sec"],
+                "batch": str(int(s["batch"])),
+                "sem": int(s["sem"]),
             }
-            marks.insert_one(mark)
-        getGrade(USN, str(int(s["batch"])), s["sem"])
-        FCD(USN, str(int(s["batch"])), s["sem"])
-        totalFCD(USN, str(int(s["batch"])), s["sem"])
-        GPA(USN, str(int(s["batch"])), s["sem"])
-        data.update({"_id": s["_id"]}, {"$set": {"done": True}})
-print("Done")
+            try:
+                stu_id = student.insert_one(stu).inserted_id
+            except:
+                print("Student Data Already Exists")
+                data.update({"_id": s["_id"]}, {"$set": {"done": True}})
+                continue
+            res = getResult(USN, s["sem"])
+            if res == 404:
+                print("USN Invalid")
+                student.remove({"_id": stu_id})
+                data.update({"_id": s["_id"]}, {"$set": {"done": True}})
+                continue
+            else:
+                student.update({"_id": stu_id}, {"$set": {"name": res[0]}})
+                print(res[0])
+                res = res[1:]
+                for r in res:
+                    mark = {
+                        "sid": str(stu_id),
+                        "subjectCode": r["subcode"],
+                        "subjectName": r["subname"],
+                        "internalMarks": r["ia"],
+                        "externalMarks": r["ea"],
+                        "totalMarks": r["total"],
+                        "result": r["result"],
+                    }
+                    marks.insert_one(mark)
+                getGrade(USN, str(int(s["batch"])), s["sem"])
+                FCD(USN, str(int(s["batch"])), s["sem"])
+                totalFCD(USN, str(int(s["batch"])), s["sem"])
+                GPA(USN, str(int(s["batch"])), s["sem"])
+                data.update({"_id": s["_id"]}, {"$set": {"done": True}})
+        print("Done")
+    except KeyboardInterrupt:
+        print("Interrupted")
+        try:
+            print(USN)
+            student.remove({"usn": USN})
+            data.update({"usn": USN}, {"$set": {"done": False}})
+        except:
+            pass
