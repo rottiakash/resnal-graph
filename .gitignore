@@ -1,1 +1,6 @@
 node_modules
+*.xlsx
+cap.png
+mask.png
+out.png
+result.png
