@@ -20,6 +20,7 @@ var MarksSchema = new Schema({
   internalMarks: Number,
   externalMarks: Number,
   totalMarks: Number,
+  result: String,
   fcd: String,
   grade: Number,
 });
