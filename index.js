@@ -244,12 +244,20 @@ app.get("/script/subjectwize/:batch/:sem/:sub/:sec?", (req, res) => {
       },
     })
     .then(function (response) {
-      res.download(
-        path.join(
-          __dirname,
-          `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sub}.xlsx`
-        )
-      );
+      if (!req.params.sec)
+        res.download(
+          path.join(
+            __dirname,
+            `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sub}.xlsx`
+          )
+        );
+      else
+        res.download(
+          path.join(
+            __dirname,
+            `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec-${req.params.sub}.xlsx`
+          )
+        );
     });
 });
 app.get("/script/batchwize/:batch/:sem/:sec?", (req, res) => {
@@ -261,12 +269,20 @@ app.get("/script/batchwize/:batch/:sem/:sec?", (req, res) => {
       },
     })
     .then(function (response) {
-      res.download(
-        path.join(
-          __dirname,
-          `/public/${req.params.batch}-${req.params.sem}_Sem.xlsx`
-        )
-      );
+      if (!req.params.sec)
+        res.download(
+          path.join(
+            __dirname,
+            `/public/${req.params.batch}-${req.params.sem}_Sem.xlsx`
+          )
+        );
+      else
+        res.download(
+          path.join(
+            __dirname,
+            `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec.xlsx`
+          )
+        );
     });
 });
 

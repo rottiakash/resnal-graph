@@ -22,10 +22,13 @@ def batchwize():
     batch = str(request.args.get("batch"))
     sem = int(request.args.get("sem"))
     query = {"batch": batch, "sem": sem}
+    workbook = xlsxwriter.Workbook("../Public/%s-%s_Sem.xlsx" % (batch, sem))
     if request.args.get("sec"):
         sec = str(request.args.get("sec"))
         query["section"] = sec
-    workbook = xlsxwriter.Workbook("../Public/%s-%s_Sem.xlsx" % (batch, sem))
+        workbook = xlsxwriter.Workbook(
+            "../Public/%s-%s_Sem-%s_Sec.xlsx" % (batch, sem, sec)
+        )
     worksheet = workbook.add_worksheet()
     heading = workbook.add_format({"bold": True, "border": 1})
     worksheet.write(0, 0, "Student Name", heading)
@@ -135,27 +138,29 @@ def subjectWize():
     sem = int(request.args.get("sem"))
     subjectCode = str(request.args.get("sub"))
     query = {"batch": batch, "sem": sem}
+    workbook = xlsxwriter.Workbook(
+        "../public/%s-%s_Sem-%s.xlsx" % (batch, sem, subjectCode)
+    )
     if request.args.get("sec"):
         sec = str(request.args.get("sec"))
         query["section"] = sec
+        workbook = xlsxwriter.Workbook(
+            "../public/%s-%s_Sem-%s_Sec-%s.xlsx" % (batch, sem, sec, subjectCode)
+        )
     s = student.find(query)
     result = []
     for stud in s:
-        d = {
-            "name": stud["name"],
-            "usn": stud["usn"],
-        }
+        d = {"name": stud["name"], "usn": stud["usn"], "section": stud["section"]}
         d["marks"] = marks.find_one(
             {"sid": str(stud["_id"]), "subjectCode": subjectCode}
         )
         result.append(d)
-    workbook = xlsxwriter.Workbook(
-        "../public/%s-%s_Sem-%s.xlsx" % (batch, sem, subjectCode)
-    )
+
     worksheet = workbook.add_worksheet()
     heading = workbook.add_format({"bold": True, "border": 1})
     worksheet.write(0, 0, "Student Name", heading)
     worksheet.write(0, 1, "Student USN", heading)
+    worksheet.write(0, 2, "Section", heading)
     merge_format = workbook.add_format({"align": "center", "bold": True, "border": 1})
     border_format = workbook.add_format({"border": 1})
     border_format_fcd_green = workbook.add_format({"border": 1, "bg_color": "green"})
@@ -163,11 +168,11 @@ def subjectWize():
     border_format_fcd_yellow = workbook.add_format({"border": 1, "bg_color": "yellow"})
     border_format_fcd_purple = workbook.add_format({"border": 1, "bg_color": "purple"})
     border_format_fcd_red = workbook.add_format({"border": 1, "bg_color": "red"})
-    worksheet.merge_range("C1:F1", result[0]["marks"]["subjectName"], merge_format)
-    worksheet.write(1, 2, "Internal Marks", heading)
-    worksheet.write(1, 3, "External Marks", heading)
-    worksheet.write(1, 4, "Total Marks", heading)
-    worksheet.write(1, 5, "Class", heading)
+    worksheet.merge_range("D1:G1", result[0]["marks"]["subjectName"], merge_format)
+    worksheet.write(1, 3, "Internal Marks", heading)
+    worksheet.write(1, 4, "External Marks", heading)
+    worksheet.write(1, 5, "Total Marks", heading)
+    worksheet.write(1, 6, "Class", heading)
     j = 2
     for i in result:
         if i["marks"]:
@@ -193,10 +198,11 @@ def subjectWize():
                 failCount += 1
             worksheet.write(j, 0, i["name"], border_format)
             worksheet.write(j, 1, i["usn"], border_format)
-            worksheet.write(j, 2, i["marks"]["internalMarks"], border_format)
-            worksheet.write(j, 3, i["marks"]["externalMarks"], border_format)
-            worksheet.write(j, 4, i["marks"]["totalMarks"], border_format)
-            worksheet.write(j, 5, i["marks"]["fcd"], fcd_format)
+            worksheet.write(j, 2, i["section"], border_format)
+            worksheet.write(j, 3, i["marks"]["internalMarks"], border_format)
+            worksheet.write(j, 4, i["marks"]["externalMarks"], border_format)
+            worksheet.write(j, 5, i["marks"]["totalMarks"], border_format)
+            worksheet.write(j, 6, i["marks"]["fcd"], fcd_format)
             j = j + 1
     worksheet.write("O4", "FCD", heading)
     worksheet.write("P4", "FC", heading)
