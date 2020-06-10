@@ -5,6 +5,7 @@ const { Student, Marks } = require("./models");
 const axios = require("axios");
 var path = require("path");
 var backlogList = [];
+var batches = [];
 mongoose.connect("mongodb://localhost:27017/data", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -15,9 +16,11 @@ db.once("open", function () {
   console.log("Connected to MongoDB");
   Student.find({}).exec((err, docs) => {
     docs.map((doc) => {
+      batches.push(doc.batch);
       if (doc.totalFCD == "F" || doc.totalFCD == "A" || doc.totalFCD == "X")
         backlogList.push(doc.usn);
     });
+    batches = [...new Set(batches)];
     backlogList = [...new Set(backlogList)];
     console.log("In Memory Cache ready");
   });
@@ -67,11 +70,26 @@ const typeDefs = gql`
       yearBack: Boolean
       subjectCode: String
     ): [Student]
+
+    batches: [String]
+    sems(batch: String): [String]
   }
 `;
 
 const resolvers = {
   Query: {
+    sems: (parent, data) => {
+      var promise = new Promise((resolve, reject) => {
+        var sems = [];
+        Student.find({ batch: data.batch }).exec((err, docs) => {
+          docs.map((doc) => sems.push(doc.sem));
+          sems = [...new Set(sems)];
+          resolve(sems);
+        });
+      });
+      return promise;
+    },
+    batches: (parent, data) => batches,
     batchResult: (parent, data) => {
       var query;
       filterSubs = false;
@@ -238,5 +256,3 @@ server.applyMiddleware({ app, path: "/" });
 app.listen({ port: 4000 }, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
 );
-
-//* /results = list(filter(lambda x: ((int(x.usn[3:5])<batch2) or (int(x.usn[3:5])<=batch2 and int(x.usn[7:])>=400 )),results)) */
