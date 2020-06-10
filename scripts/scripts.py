@@ -1,19 +1,17 @@
-from flask import Flask, request, send_file
+from flask import Flask, request, send_file, Response
+import sys
+from pymongo import MongoClient
+import xlsxwriter
 
+client = MongoClient("localhost", 27017)
+db = client.data
+student = db.students
+marks = db.marks
 app = Flask(__name__)
 
 
 @app.route("/script/batchwize")
 def batchwize():
-    import sys
-    from pymongo import MongoClient
-    import xlsxwriter
-
-    client = MongoClient("localhost", 27017)
-    db = client.data
-    student = db.students
-    marks = db.marks
-
     cFCD = 0
     cFC = 0
     cSC = 0
@@ -120,7 +118,8 @@ def batchwize():
     )
     worksheet.insert_chart("O31", Pchart)
     workbook.close()
-    return send_file("../Public/%s-%s_Sem.xlsx" % (batch, sem), as_attachment=True)
+    status_code = Response(status=200)
+    return status_code
 
 
 app.run(host="0.0.0.0", debug=True)

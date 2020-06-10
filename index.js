@@ -2,6 +2,8 @@ const { ApolloServer, gql } = require("apollo-server-express");
 const mongoose = require("mongoose");
 const express = require("express");
 const { Student, Marks } = require("./models");
+const axios = require("axios");
+var path = require("path");
 var backlogList = [];
 mongoose.connect("mongodb://localhost:27017/data", {
   useNewUrlParser: true,
@@ -215,6 +217,23 @@ const server = new ApolloServer({
   resolvers,
 });
 const app = express();
+app.get("/script/batchwize/:batch/:sem/:sec?", (req, res) => {
+  console.log(req.params);
+  axios
+    .get("http://0.0.0.0:5000/script/batchwize", {
+      params: {
+        ...req.params,
+      },
+    })
+    .then(function (response) {
+      res.download(
+        path.join(
+          __dirname,
+          `/public/${req.params.batch}-${req.params.sem}_Sem.xlsx`
+        )
+      );
+    });
+});
 server.applyMiddleware({ app, path: "/" });
 app.listen({ port: 4000 }, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
