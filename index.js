@@ -235,6 +235,23 @@ const server = new ApolloServer({
   resolvers,
 });
 const app = express();
+app.get("/script/subjectwize/:batch/:sem/:sub/:sec?", (req, res) => {
+  console.log(req.params);
+  axios
+    .get("http://0.0.0.0:5000/script/subjectwize", {
+      params: {
+        ...req.params,
+      },
+    })
+    .then(function (response) {
+      res.download(
+        path.join(
+          __dirname,
+          `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sub}.xlsx`
+        )
+      );
+    });
+});
 app.get("/script/batchwize/:batch/:sem/:sec?", (req, res) => {
   console.log(req.params);
   axios
@@ -252,6 +269,7 @@ app.get("/script/batchwize/:batch/:sem/:sec?", (req, res) => {
       );
     });
 });
+
 server.applyMiddleware({ app, path: "/" });
 app.listen({ port: 4000 }, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)

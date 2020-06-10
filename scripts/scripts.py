@@ -122,4 +122,125 @@ def batchwize():
     return status_code
 
 
+@app.route("/script/subjectwize")
+def subjectWize():
+    cFCD = 0
+    cFC = 0
+    cSC = 0
+    cP = 0
+    cF = 0
+    passCount = 0
+    failCount = 0
+    batch = str(request.args.get("batch"))
+    sem = int(request.args.get("sem"))
+    subjectCode = str(request.args.get("sub"))
+    query = {"batch": batch, "sem": sem}
+    if request.args.get("sec"):
+        sec = str(request.args.get("sec"))
+        query["section"] = sec
+    s = student.find(query)
+    result = []
+    for stud in s:
+        d = {
+            "name": stud["name"],
+            "usn": stud["usn"],
+        }
+        d["marks"] = marks.find_one(
+            {"sid": str(stud["_id"]), "subjectCode": subjectCode}
+        )
+        result.append(d)
+    workbook = xlsxwriter.Workbook(
+        "../public/%s-%s_Sem-%s.xlsx" % (batch, sem, subjectCode)
+    )
+    worksheet = workbook.add_worksheet()
+    heading = workbook.add_format({"bold": True, "border": 1})
+    worksheet.write(0, 0, "Student Name", heading)
+    worksheet.write(0, 1, "Student USN", heading)
+    merge_format = workbook.add_format({"align": "center", "bold": True, "border": 1})
+    border_format = workbook.add_format({"border": 1})
+    border_format_fcd_green = workbook.add_format({"border": 1, "bg_color": "green"})
+    border_format_fcd_blue = workbook.add_format({"border": 1, "bg_color": "blue"})
+    border_format_fcd_yellow = workbook.add_format({"border": 1, "bg_color": "yellow"})
+    border_format_fcd_purple = workbook.add_format({"border": 1, "bg_color": "purple"})
+    border_format_fcd_red = workbook.add_format({"border": 1, "bg_color": "red"})
+    worksheet.merge_range("C1:F1", result[0]["marks"]["subjectName"], merge_format)
+    worksheet.write(1, 2, "Internal Marks", heading)
+    worksheet.write(1, 3, "External Marks", heading)
+    worksheet.write(1, 4, "Total Marks", heading)
+    worksheet.write(1, 5, "Class", heading)
+    j = 2
+    for i in result:
+        if i["marks"]:
+            if i["marks"]["fcd"] == "FCD":
+                fcd_format = border_format_fcd_green
+                cFCD = cFCD + 1
+                passCount += 1
+            elif i["marks"]["fcd"] == "FC":
+                fcd_format = border_format_fcd_blue
+                cFC = cFC + 1
+                passCount += 1
+            elif i["marks"]["fcd"] == "SC":
+                fcd_format = border_format_fcd_yellow
+                cSC = cSC + 1
+                passCount += 1
+            elif i["marks"]["fcd"] == "P":
+                fcd_format = border_format_fcd_purple
+                cP = cP + 1
+                passCount += 1
+            elif i["marks"]["fcd"] == "F":
+                fcd_format = border_format_fcd_red
+                cF = cF + 1
+                failCount += 1
+            worksheet.write(j, 0, i["name"], border_format)
+            worksheet.write(j, 1, i["usn"], border_format)
+            worksheet.write(j, 2, i["marks"]["internalMarks"], border_format)
+            worksheet.write(j, 3, i["marks"]["externalMarks"], border_format)
+            worksheet.write(j, 4, i["marks"]["totalMarks"], border_format)
+            worksheet.write(j, 5, i["marks"]["fcd"], fcd_format)
+            j = j + 1
+    worksheet.write("O4", "FCD", heading)
+    worksheet.write("P4", "FC", heading)
+    worksheet.write("Q4", "SC", heading)
+    worksheet.write("R4", "P", heading)
+    worksheet.write("S4", "F", heading)
+    worksheet.write("O5", cFCD, border_format)
+    worksheet.write("P5", cFC, border_format)
+    worksheet.write("Q5", cSC, border_format)
+    worksheet.write("R5", cP, border_format)
+    worksheet.write("S5", cF, border_format)
+    chart = workbook.add_chart({"type": "column"})
+    data = ["FCD", "FC", "SC", "P", "F"]
+    chart.add_series(
+        {
+            "data_labels": {"value": True, "position": "inside_end"},
+            "categories": "=Sheet1!$O$4:$S$4",
+            "values": "=Sheet1!$O$5:$S$5",
+        }
+    )
+    chart.set_legend({"none": True})
+    worksheet.insert_chart("O9", chart)
+    worksheet.write("O26", "Pass", heading)
+    worksheet.write("P26", "Fail", heading)
+    worksheet.write("O27", int(passCount), border_format)
+    worksheet.write("P27", int(failCount), border_format)
+    Pchart = workbook.add_chart({"type": "pie"})
+    Pchart.add_series(
+        {
+            "data_labels": {
+                "value": True,
+                "category": True,
+                "separator": "\n",
+                "position": "center",
+            },
+            "categories": "=Sheet1!$O$26:$P$26",
+            "values": "=Sheet1!$O$27:$P$27",
+            "points": [{"fill": {"color": "green"}}, {"fill": {"color": "red"}},],
+        }
+    )
+    worksheet.insert_chart("O31", Pchart)
+    workbook.close()
+    status_code = Response(status=200)
+    return status_code
+
+
 app.run(host="0.0.0.0", debug=True)
