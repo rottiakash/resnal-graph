@@ -294,6 +294,7 @@ def subjectWize():
 
 @app.route("/script/exportall")
 def exportall():
+    subjectMap = {}
     batch = str(request.args.get("batch"))
     sem = int(request.args.get("sem"))
     yearback = str(request.args.get("yearback"))
@@ -333,17 +334,19 @@ def exportall():
             "gpa": i["gpa"]
         }
         for j in allsubs:
+            subjectMap[j["subjectCode"]] = j["subjectName"]
             subs.add(j["subjectCode"])
             d[j["subjectCode"]] = {"internalMarks": j["internalMarks"],
                                    "externalMarks": j["externalMarks"],
                                    "totalMarks": j["totalMarks"],
-                                   "fcd": j["fcd"]
+                                   "fcd": j["fcd"],
                                    }
         allstudents.append(d)
     subs = sorted(subs)
     j = 3
     for i in subs:
-        worksheet.merge_range(0, j, 0, j + 3, i, merge_format)
+        worksheet.merge_range(0, j, 0, j + 3, i+"-" +
+                              subjectMap[i], merge_format)
         worksheet.write(1, j, "Internal Marks", heading)
         j = j + 1
         worksheet.write(1, j, "External Marks", heading)
