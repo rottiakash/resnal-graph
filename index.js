@@ -80,22 +80,35 @@ const typeDefs = gql`
 
     batches: [String]
     sems(batch: String): [String]
-    subs(batch: String, sem: Int): [String]
+    subs(batch: String, sem: Int): [Subject]
   }
 `;
 
 const resolvers = {
   Query: {
     subs: (parent, data) => {
-      Student.find({ batch: data.batch, sem: data.sem })
-        .exec()
-        .then((students) => {
-          var ids = [];
-          students.map((student) => ids.push(student._id.toString()));
-          Marks.find({ sid: { $in: ids } })
-            .distinct("subjectCode")
-            .then((subs) => console.log([...new Set(subs)]));
-        });
+      var promise = new Promise((resolve, reject) => {
+        Student.find({ batch: data.batch, sem: data.sem })
+          .exec()
+          .then((students) => {
+            var ids = [];
+            students.map((student) => ids.push(student._id.toString()));
+            Marks.aggregate([
+              { $match: { sid: { $in: ids } } },
+              {
+                $group: {
+                  _id: "$subjectCode",
+                  subjectCode: { $first: "$subjectCode" },
+                  subjectName: { $first: "$subjectName" },
+                },
+              },
+            ])
+              .exec()
+              .then((docs) => resolve(docs));
+          });
+      });
+
+      return promise;
     },
     sems: (parent, data) => {
       var promise = new Promise((resolve, reject) => {
