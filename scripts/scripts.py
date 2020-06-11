@@ -3,11 +3,17 @@ import sys
 from pymongo import MongoClient
 import xlsxwriter
 
-client = MongoClient("localhost", 27017)
+client = MongoClient("rottiakash.ddns.net", 27017)
 db = client.data
 student = db.students
 marks = db.marks
 app = Flask(__name__)
+backlogList = []
+students = list(student.find())
+for i in students:
+    if i["totalFCD"] == "F":
+        backlogList.append(i["usn"])
+print("In Memory Cache Ready")
 
 
 @app.route("/script/batchwize")
@@ -22,12 +28,16 @@ def batchwize():
     batch = str(request.args.get("batch"))
     sem = int(request.args.get("sem"))
     query = {"batch": batch, "sem": sem}
-    workbook = xlsxwriter.Workbook("../Public/%s-%s_Sem.xlsx" % (batch, sem))
+    yearback = str(request.args.get("yearback"))
+    backlog = str(request.args.get("backlog"))
+    workbook = xlsxwriter.Workbook(
+        "C://Clones/resnal-graph/Public/%s-%s_Sem.xlsx" % (batch, sem))
     if request.args.get("sec"):
         sec = str(request.args.get("sec"))
         query["section"] = sec
         workbook = xlsxwriter.Workbook(
-            "../Public/%s-%s_Sem-%s_Sec.xlsx" % (batch, sem, sec)
+            "C://Clones/resnal-graph/Public/%s-%s_Sem-%s_Sec.xlsx" % (
+                batch, sem, sec)
         )
     worksheet = workbook.add_worksheet()
     heading = workbook.add_format({"bold": True, "border": 1})
@@ -35,7 +45,8 @@ def batchwize():
     worksheet.write(0, 1, "Student USN", heading)
     worksheet.write(0, 2, "Section", heading)
     worksheet.write(0, 3, "GPA", heading)
-    merge_format = workbook.add_format({"align": "center", "bold": True, "border": 1})
+    merge_format = workbook.add_format(
+        {"align": "center", "bold": True, "border": 1})
     worksheet.merge_range("E1:F1", "Overall Grade", merge_format)
     border_format = workbook.add_format({"border": 1})
     border_format_fcd_green = workbook.add_format(
@@ -54,7 +65,14 @@ def batchwize():
         {"align": "center", "border": 1, "bg_color": "red"}
     )
     j = 1
-    for i in student.find(query).sort("gpa", -1):
+    result = list(student.find(query).sort("gpa", -1))
+    batch2 = batch[2:]
+    if(yearback == "false"):
+        result = list(filter(lambda x: not(int(x["usn"][3:5]) < int(batch2) or (
+            int(x["usn"][3:5]) <= int(batch2) and int(x["usn"][7:]) >= 400)), result))
+    if(backlog == "true"):
+        result = list(filter(lambda x: x["usn"] in backlogList, result))
+    for i in result:
         if i["totalFCD"] == "F" or i["totalFCD"] == "A" or i["totalFCD"] == "X":
             failCount += 1
         else:
@@ -116,7 +134,7 @@ def batchwize():
             },
             "categories": "=Sheet1!$O$26:$P$26",
             "values": "=Sheet1!$O$27:$P$27",
-            "points": [{"fill": {"color": "green"}}, {"fill": {"color": "red"}},],
+            "points": [{"fill": {"color": "green"}}, {"fill": {"color": "red"}}, ],
         }
     )
     worksheet.insert_chart("O31", Pchart)
@@ -137,20 +155,31 @@ def subjectWize():
     batch = str(request.args.get("batch"))
     sem = int(request.args.get("sem"))
     subjectCode = str(request.args.get("sub"))
+    yearback = str(request.args.get("yearback"))
+    backlog = str(request.args.get("backlog"))
     query = {"batch": batch, "sem": sem}
     workbook = xlsxwriter.Workbook(
-        "../public/%s-%s_Sem-%s.xlsx" % (batch, sem, subjectCode)
+        "C://Clones/resnal-graph/Public/%s-%s_Sem-%s.xlsx" % (
+            batch, sem, subjectCode)
     )
     if request.args.get("sec"):
         sec = str(request.args.get("sec"))
         query["section"] = sec
         workbook = xlsxwriter.Workbook(
-            "../public/%s-%s_Sem-%s_Sec-%s.xlsx" % (batch, sem, sec, subjectCode)
+            "C://Clones/resnal-graph/Public/%s-%s_Sem-%s_Sec-%s.xlsx" % (
+                batch, sem, sec, subjectCode)
         )
-    s = student.find(query)
+    s = list(student.find(query))
+    batch2 = batch[2:]
+    if(yearback == "false"):
+        s = list(filter(lambda x: not(int(x["usn"][3:5]) < int(batch2) or (
+            int(x["usn"][3:5]) <= int(batch2) and int(x["usn"][7:]) >= 400)), s))
+    if(backlog == "true"):
+        s = list(filter(lambda x: x["usn"] in backlogList, s))
     result = []
     for stud in s:
-        d = {"name": stud["name"], "usn": stud["usn"], "section": stud["section"]}
+        d = {"name": stud["name"], "usn": stud["usn"],
+             "section": stud["section"]}
         d["marks"] = marks.find_one(
             {"sid": str(stud["_id"]), "subjectCode": subjectCode}
         )
@@ -160,13 +189,19 @@ def subjectWize():
     worksheet.write(0, 0, "Student Name", heading)
     worksheet.write(0, 1, "Student USN", heading)
     worksheet.write(0, 2, "Section", heading)
-    merge_format = workbook.add_format({"align": "center", "bold": True, "border": 1})
+    merge_format = workbook.add_format(
+        {"align": "center", "bold": True, "border": 1})
     border_format = workbook.add_format({"border": 1})
-    border_format_fcd_green = workbook.add_format({"border": 1, "bg_color": "green"})
-    border_format_fcd_blue = workbook.add_format({"border": 1, "bg_color": "blue"})
-    border_format_fcd_yellow = workbook.add_format({"border": 1, "bg_color": "yellow"})
-    border_format_fcd_purple = workbook.add_format({"border": 1, "bg_color": "purple"})
-    border_format_fcd_red = workbook.add_format({"border": 1, "bg_color": "red"})
+    border_format_fcd_green = workbook.add_format(
+        {"border": 1, "bg_color": "green"})
+    border_format_fcd_blue = workbook.add_format(
+        {"border": 1, "bg_color": "blue"})
+    border_format_fcd_yellow = workbook.add_format(
+        {"border": 1, "bg_color": "yellow"})
+    border_format_fcd_purple = workbook.add_format(
+        {"border": 1, "bg_color": "purple"})
+    border_format_fcd_red = workbook.add_format(
+        {"border": 1, "bg_color": "red"})
     sname = ""
     index = 0
     try:
@@ -248,13 +283,18 @@ def subjectWize():
             },
             "categories": "=Sheet1!$O$26:$P$26",
             "values": "=Sheet1!$O$27:$P$27",
-            "points": [{"fill": {"color": "green"}}, {"fill": {"color": "red"}},],
+            "points": [{"fill": {"color": "green"}}, {"fill": {"color": "red"}}, ],
         }
     )
     worksheet.insert_chart("O31", Pchart)
     workbook.close()
     status_code = Response(status=200)
     return status_code
+
+
+@app.route("/exportall")
+def exportall():
+    pass
 
 
 app.run(host="0.0.0.0", debug=True)

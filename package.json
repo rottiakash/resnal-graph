@@ -8,6 +8,10 @@
     "axios": "^0.19.2",
     "express": "^4.17.1",
     "graphql": "^15.1.0",
-    "mongoose": "^5.9.18"
+    "mongoose": "^5.9.18",
+    "nodemon": "^2.0.4"
+  },
+  "scripts": {
+    "start": "nodemon index.js"
   }
 }

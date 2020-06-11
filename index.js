@@ -7,7 +7,7 @@ var path = require("path");
 const { resolve } = require("path");
 var backlogList = [];
 var batches = [];
-mongoose.connect("mongodb://localhost:27017/data", {
+mongoose.connect("mongodb://rottiakash.ddns.net:27017/data", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -370,54 +370,60 @@ const server = new ApolloServer({
   resolvers,
 });
 const app = express();
-app.get("/script/subjectwize/:batch/:sem/:sub/:sec?", (req, res) => {
-  axios
-    .get("http://0.0.0.0:5000/script/subjectwize", {
-      params: {
-        ...req.params,
-      },
-    })
-    .then(function (response) {
-      if (!req.params.sec)
-        res.download(
-          path.join(
-            __dirname,
-            `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sub}.xlsx`
-          )
-        );
-      else
-        res.download(
-          path.join(
-            __dirname,
-            `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec-${req.params.sub}.xlsx`
-          )
-        );
-    });
-});
-app.get("/script/batchwize/:batch/:sem/:sec?", (req, res) => {
-  axios
-    .get("http://0.0.0.0:5000/script/batchwize", {
-      params: {
-        ...req.params,
-      },
-    })
-    .then(function (response) {
-      if (!req.params.sec)
-        res.download(
-          path.join(
-            __dirname,
-            `/public/${req.params.batch}-${req.params.sem}_Sem.xlsx`
-          )
-        );
-      else
-        res.download(
-          path.join(
-            __dirname,
-            `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec.xlsx`
-          )
-        );
-    });
-});
+app.get(
+  "/script/subjectwize/:batch/:sem/:sub/:yearback/:backlog/:sec?",
+  (req, res) => {
+    axios
+      .get("http://0.0.0.0:5000/script/subjectwize", {
+        params: {
+          ...req.params,
+        },
+      })
+      .then(function (response) {
+        if (!req.params.sec)
+          res.download(
+            path.join(
+              __dirname,
+              `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sub}.xlsx`
+            )
+          );
+        else
+          res.download(
+            path.join(
+              __dirname,
+              `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec-${req.params.sub}.xlsx`
+            )
+          );
+      });
+  }
+);
+app.get(
+  "/script/batchwize/:batch/:sem/:yearback/:backlog/:sec?",
+  (req, res) => {
+    axios
+      .get("http://0.0.0.0:5000/script/batchwize", {
+        params: {
+          ...req.params,
+        },
+      })
+      .then(function (response) {
+        if (!req.params.sec)
+          res.download(
+            path.join(
+              __dirname,
+              `/public/${req.params.batch}-${req.params.sem}_Sem.xlsx`
+            )
+          );
+        else
+          res.download(
+            path.join(
+              __dirname,
+              `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec.xlsx`
+            )
+          );
+      });
+  }
+);
 
 server.applyMiddleware({ app, path: "/" });
 app.listen({ port: 4000 }, () =>
