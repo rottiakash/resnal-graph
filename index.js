@@ -103,6 +103,7 @@ const resolvers = {
                 },
               },
             ])
+              .sort("-subjectCode")
               .exec()
               .then((docs) => resolve(docs));
           });
