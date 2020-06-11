@@ -292,9 +292,125 @@ def subjectWize():
     return status_code
 
 
-@app.route("/exportall")
+@app.route("/script/exportall")
 def exportall():
-    pass
+    batch = str(request.args.get("batch"))
+    sem = int(request.args.get("sem"))
+    yearback = str(request.args.get("yearback"))
+    backlog = str(request.args.get("backlog"))
+    query = {"batch": batch, "sem": sem}
+    workbook = xlsxwriter.Workbook(
+        "C://Clones/resnal-graph/Public/All_subs-%s-%s_Sem.xlsx" % (batch, sem))
+    if request.args.get("sec"):
+        sec = str(request.args.get("sec"))
+        query["section"] = sec
+        workbook = xlsxwriter.Workbook(
+            "C://Clones/resnal-graph/Public/All_subs-%s-%s_Sem-%s_Sec.xlsx" % (batch, sem, sec))
+    allstudents = []
+    results = list(student.find(query))
+    batch2 = batch[2:]
+    if(yearback == "false"):
+        results = list(filter(lambda x: not(int(x["usn"][3:5]) < int(batch2) or (
+            int(x["usn"][3:5]) <= int(batch2) and int(x["usn"][7:]) >= 400)), results))
+    if(backlog == "true"):
+        results = list(filter(lambda x: x["usn"] in backlogList, results))
+
+    worksheet = workbook.add_worksheet()
+    heading = workbook.add_format({"bold": True, "border": 1})
+    worksheet.write(0, 0, "Student Name", heading)
+    merge_format = workbook.add_format(
+        {"align": "center", "bold": True, "border": 1}
+    )
+    worksheet.write(0, 1, "Student USN", heading)
+    worksheet.write(0, 2, "Section", heading)
+    subs = set()
+    for i in results:
+        allsubs = marks.find({"sid": str(i["_id"])})
+        d = {
+            "usn": i["usn"],
+            "section": i["section"],
+            "name": i["name"],
+            "gpa": i["gpa"]
+        }
+        for j in allsubs:
+            subs.add(j["subjectCode"])
+            d[j["subjectCode"]] = {"internalMarks": j["internalMarks"],
+                                   "externalMarks": j["externalMarks"],
+                                   "totalMarks": j["totalMarks"],
+                                   "fcd": j["fcd"]
+                                   }
+        allstudents.append(d)
+    subs = sorted(subs)
+    j = 3
+    for i in subs:
+        worksheet.merge_range(0, j, 0, j + 3, i, merge_format)
+        worksheet.write(1, j, "Internal Marks", heading)
+        j = j + 1
+        worksheet.write(1, j, "External Marks", heading)
+        j = j + 1
+        worksheet.write(1, j, "Total Marks", heading)
+        j = j + 1
+        worksheet.write(1, j, "Class", heading)
+        j = j + 1
+
+    worksheet.write(0, j, "GPA", heading)
+    border_format = workbook.add_format({"border": 1})
+    border_format_fcd_green = workbook.add_format(
+        {"align": "center", "border": 1, "bg_color": "green"}
+    )
+    border_format_fcd_blue = workbook.add_format(
+        {"align": "center", "border": 1, "bg_color": "blue"}
+    )
+    border_format_fcd_yellow = workbook.add_format(
+        {"align": "center", "border": 1, "bg_color": "yellow"}
+    )
+    border_format_fcd_purple = workbook.add_format(
+        {"align": "center", "border": 1, "bg_color": "purple"}
+    )
+    border_format_fcd_red = workbook.add_format(
+        {"align": "center", "border": 1, "bg_color": "red"}
+    )
+    row = 2
+    col = 3
+    for i in allstudents:
+        worksheet.write(row, 0, i["name"], border_format)
+        worksheet.write(row, 1, i["usn"], border_format)
+        worksheet.write(row, 2, i["section"], border_format)
+        for j in subs:
+            try:
+                isub = i[j]
+            except KeyError:
+                isub = None
+            if isub:
+                if isub["fcd"] == "FCD":
+                    fcd_format = border_format_fcd_green
+                elif isub["fcd"] == "FC":
+                    fcd_format = border_format_fcd_blue
+                elif isub["fcd"] == "SC":
+                    fcd_format = border_format_fcd_yellow
+                elif isub["fcd"] == "P":
+                    fcd_format = border_format_fcd_purple
+                elif isub["fcd"] == "F":
+                    fcd_format = border_format_fcd_red
+                worksheet.write(row, col, isub["internalMarks"], border_format)
+                worksheet.write(
+                    row, col + 1, isub["externalMarks"], border_format)
+                worksheet.write(
+                    row, col + 2, isub["totalMarks"], border_format)
+                worksheet.write(row, col + 3, isub["fcd"], fcd_format)
+                col = col + 4
+            else:
+                worksheet.write(row, col, "-", border_format)
+                worksheet.write(row, col + 1, "-", border_format)
+                worksheet.write(row, col + 2, "-", border_format)
+                worksheet.write(row, col + 3, "-", border_format)
+                col = col + 4
+        worksheet.write(row, col, i["gpa"], border_format)
+        row = row + 1
+        col = 3
+    workbook.close()
+    status_code = Response(status=200)
+    return status_code
 
 
 app.run(host="0.0.0.0", debug=True)

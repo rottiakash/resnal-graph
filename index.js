@@ -374,7 +374,7 @@ app.get(
   "/script/subjectwize/:batch/:sem/:sub/:yearback/:backlog/:sec?",
   (req, res) => {
     axios
-      .get("http://0.0.0.0:5000/script/subjectwize", {
+      .get("http://localhost:5000/script/subjectwize", {
         params: {
           ...req.params,
         },
@@ -401,7 +401,7 @@ app.get(
   "/script/batchwize/:batch/:sem/:yearback/:backlog/:sec?",
   (req, res) => {
     axios
-      .get("http://0.0.0.0:5000/script/batchwize", {
+      .get("http://localhost:5000/script/batchwize", {
         params: {
           ...req.params,
         },
@@ -424,7 +424,33 @@ app.get(
       });
   }
 );
-
+app.get(
+  "/script/exportall/:batch/:sem/:yearback/:backlog/:sec?",
+  (req, res) => {
+    axios
+      .get("http://localhost:5000/script/exportall", {
+        params: {
+          ...req.params,
+        },
+      })
+      .then(function (response) {
+        if (!req.params.sec)
+          res.download(
+            path.join(
+              __dirname,
+              `/public/All_subs-${req.params.batch}-${req.params.sem}_Sem.xlsx`
+            )
+          );
+        else
+          res.download(
+            path.join(
+              __dirname,
+              `/public/All_subs-${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec.xlsx`
+            )
+          );
+      });
+  }
+);
 server.applyMiddleware({ app, path: "/" });
 app.listen({ port: 4000 }, () =>
   console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
