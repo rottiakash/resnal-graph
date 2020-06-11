@@ -127,18 +127,106 @@ const resolvers = {
       var query;
       filterSubs = false;
       if (data.backLog) {
-        query = data.section
-          ? Student.find({
-              usn: { $in: backlogList },
-              sem: data.sem,
-              batch: data.batch,
-              section: data.section,
-            }).sort("-gpa")
-          : Student.find({
-              usn: { $in: backlogList },
-              sem: data.sem,
-              batch: data.batch,
-            }).sort("-gpa");
+        if (data.yearBack)
+          query = data.section
+            ? Student.find({
+                usn: { $in: backlogList },
+                sem: data.sem,
+                batch: data.batch,
+                section: data.section,
+              }).sort("-gpa")
+            : Student.find({
+                usn: { $in: backlogList },
+                sem: data.sem,
+                batch: data.batch,
+              }).sort("-gpa");
+        else
+          query = data.section
+            ? Student.aggregate([
+                {
+                  $project: {
+                    name: 1,
+                    sem: 1,
+                    section: 1,
+                    totalFCD: 1,
+                    usn: 1,
+                    gpa: 1,
+                    batch: 1,
+                    isback: {
+                      $or: [
+                        {
+                          $lt: [
+                            { $substr: ["$usn", 3, 2] },
+                            data.batch.slice(2, 4),
+                          ],
+                        },
+                        {
+                          $and: [
+                            {
+                              $lte: [
+                                { $substr: ["$usn", 3, 2] },
+                                data.batch.slice(2, 4),
+                              ],
+                            },
+                            { $gte: [{ $substr: ["$usn", 7, 3] }, "400"] },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+                {
+                  $match: {
+                    usn: { $in: backlogList },
+                    isback: false,
+                    batch: data.batch,
+                    sem: data.sem,
+                    section: data.section,
+                  },
+                },
+              ]).sort("-gpa")
+            : Student.aggregate([
+                {
+                  $project: {
+                    name: 1,
+                    sem: 1,
+                    section: 1,
+                    totalFCD: 1,
+                    usn: 1,
+                    gpa: 1,
+                    batch: 1,
+                    isback: {
+                      $or: [
+                        {
+                          $lt: [
+                            { $substr: ["$usn", 3, 2] },
+                            data.batch.slice(2, 4),
+                          ],
+                        },
+                        {
+                          $and: [
+                            {
+                              $lte: [
+                                { $substr: ["$usn", 3, 2] },
+                                data.batch.slice(2, 4),
+                              ],
+                            },
+                            { $gte: [{ $substr: ["$usn", 7, 3] }, "400"] },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+                {
+                  $match: {
+                    usn: { $in: backlogList },
+                    isback: false,
+                    batch: data.batch,
+                    sem: data.sem,
+                  },
+                },
+              ]).sort("-gpa");
       } else {
         if (data.yearBack)
           query = data.section
@@ -241,18 +329,106 @@ const resolvers = {
     subjectWizeResult: (parent, data) => {
       filterSubs = true;
       if (data.backLog) {
-        query = data.section
-          ? Student.find({
-              usn: { $in: backlogList },
-              sem: data.sem,
-              batch: data.batch,
-              section: data.section,
-            })
-          : Student.find({
-              usn: { $in: backlogList },
-              sem: data.sem,
-              batch: data.batch,
-            });
+        if (data.yearBack)
+          query = data.section
+            ? Student.find({
+                usn: { $in: backlogList },
+                sem: data.sem,
+                batch: data.batch,
+                section: data.section,
+              })
+            : Student.find({
+                usn: { $in: backlogList },
+                sem: data.sem,
+                batch: data.batch,
+              });
+        else
+          query = data.section
+            ? Student.aggregate([
+                {
+                  $project: {
+                    name: 1,
+                    sem: 1,
+                    section: 1,
+                    totalFCD: 1,
+                    usn: 1,
+                    gpa: 1,
+                    batch: 1,
+                    isback: {
+                      $or: [
+                        {
+                          $lt: [
+                            { $substr: ["$usn", 3, 2] },
+                            data.batch.slice(2, 4),
+                          ],
+                        },
+                        {
+                          $and: [
+                            {
+                              $lte: [
+                                { $substr: ["$usn", 3, 2] },
+                                data.batch.slice(2, 4),
+                              ],
+                            },
+                            { $gte: [{ $substr: ["$usn", 7, 3] }, "400"] },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+                {
+                  $match: {
+                    usn: { $in: backlogList },
+                    isback: false,
+                    batch: data.batch,
+                    sem: data.sem,
+                    section: data.section,
+                  },
+                },
+              ])
+            : Student.aggregate([
+                {
+                  $project: {
+                    name: 1,
+                    sem: 1,
+                    section: 1,
+                    totalFCD: 1,
+                    usn: 1,
+                    gpa: 1,
+                    batch: 1,
+                    isback: {
+                      $or: [
+                        {
+                          $lt: [
+                            { $substr: ["$usn", 3, 2] },
+                            data.batch.slice(2, 4),
+                          ],
+                        },
+                        {
+                          $and: [
+                            {
+                              $lte: [
+                                { $substr: ["$usn", 3, 2] },
+                                data.batch.slice(2, 4),
+                              ],
+                            },
+                            { $gte: [{ $substr: ["$usn", 7, 3] }, "400"] },
+                          ],
+                        },
+                      ],
+                    },
+                  },
+                },
+                {
+                  $match: {
+                    usn: { $in: backlogList },
+                    isback: false,
+                    batch: data.batch,
+                    sem: data.sem,
+                  },
+                },
+              ]);
       } else {
         if (data.yearBack)
           query = data.section
@@ -260,7 +436,7 @@ const resolvers = {
                 sem: data.sem,
                 batch: data.batch,
                 section: data.section,
-              }).sort("-gpa")
+              })
             : Student.find({ sem: data.sem, batch: data.batch });
         else
           query = data.section
