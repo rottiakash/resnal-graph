@@ -155,7 +155,6 @@ def subjectWize():
             {"sid": str(stud["_id"]), "subjectCode": subjectCode}
         )
         result.append(d)
-
     worksheet = workbook.add_worksheet()
     heading = workbook.add_format({"bold": True, "border": 1})
     worksheet.write(0, 0, "Student Name", heading)
@@ -168,7 +167,16 @@ def subjectWize():
     border_format_fcd_yellow = workbook.add_format({"border": 1, "bg_color": "yellow"})
     border_format_fcd_purple = workbook.add_format({"border": 1, "bg_color": "purple"})
     border_format_fcd_red = workbook.add_format({"border": 1, "bg_color": "red"})
-    worksheet.merge_range("D1:G1", result[0]["marks"]["subjectName"], merge_format)
+    sname = ""
+    index = 0
+    try:
+        if result[index]["marks"]:
+            sname = result[index]["marks"]["subjectName"]
+        else:
+            index += 1
+    except:
+        pass
+    worksheet.merge_range("D1:G1", sname, merge_format)
     worksheet.write(1, 3, "Internal Marks", heading)
     worksheet.write(1, 4, "External Marks", heading)
     worksheet.write(1, 5, "Total Marks", heading)
