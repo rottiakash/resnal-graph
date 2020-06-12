@@ -7,7 +7,7 @@ var path = require("path");
 const { resolve } = require("path");
 var backlogList = [];
 var batches = [];
-mongoose.connect("mongodb://rottiakash.ddns.net:27017/data", {
+mongoose.connect("mongodb://db:27017/data", {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 });
@@ -546,11 +546,12 @@ const server = new ApolloServer({
   resolvers,
 });
 const app = express();
+const flaskURL = "http://flask";
 app.get(
   "/script/subjectwize/:batch/:sem/:sub/:yearback/:backlog/:sec?",
   (req, res) => {
     axios
-      .get("http://localhost:5000/script/subjectwize", {
+      .get(flaskURL + "/script/subjectwize", {
         params: {
           ...req.params,
         },
@@ -558,17 +559,11 @@ app.get(
       .then(function (response) {
         if (!req.params.sec)
           res.download(
-            path.join(
-              __dirname,
-              `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sub}.xlsx`
-            )
+            `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sub}.xlsx`
           );
         else
           res.download(
-            path.join(
-              __dirname,
-              `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec-${req.params.sub}.xlsx`
-            )
+            `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec-${req.params.sub}.xlsx`
           );
       });
   }
@@ -577,7 +572,7 @@ app.get(
   "/script/batchwize/:batch/:sem/:yearback/:backlog/:sec?",
   (req, res) => {
     axios
-      .get("http://localhost:5000/script/batchwize", {
+      .get(flaskURL + "/script/batchwize", {
         params: {
           ...req.params,
         },
@@ -585,17 +580,11 @@ app.get(
       .then(function (response) {
         if (!req.params.sec)
           res.download(
-            path.join(
-              __dirname,
-              `/public/${req.params.batch}-${req.params.sem}_Sem.xlsx`
-            )
+            `/public/${req.params.batch}-${req.params.sem}_Sem.xlsx`
           );
         else
           res.download(
-            path.join(
-              __dirname,
-              `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec.xlsx`
-            )
+            `/public/${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec.xlsx`
           );
       });
   }
@@ -604,7 +593,7 @@ app.get(
   "/script/exportall/:batch/:sem/:yearback/:backlog/:sec?",
   (req, res) => {
     axios
-      .get("http://localhost:5000/script/exportall", {
+      .get(flaskURL + "/script/exportall", {
         params: {
           ...req.params,
         },
@@ -612,22 +601,15 @@ app.get(
       .then(function (response) {
         if (!req.params.sec)
           res.download(
-            path.join(
-              __dirname,
-              `/public/All_subs-${req.params.batch}-${req.params.sem}_Sem.xlsx`
-            )
+            `/public/All_subs-${req.params.batch}-${req.params.sem}_Sem.xlsx`
           );
         else
           res.download(
-            path.join(
-              __dirname,
-              `/public/All_subs-${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec.xlsx`
-            )
+            `/public/All_subs-${req.params.batch}-${req.params.sem}_Sem-${req.params.sec}_Sec.xlsx`
           );
       });
   }
 );
 server.applyMiddleware({ app, path: "/" });
-app.listen({ port: 4000 }, () =>
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`)
-);
+
+app.listen({ port: 80 }, () => console.log(`🚀Node Server ready`));
