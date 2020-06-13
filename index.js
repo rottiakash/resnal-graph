@@ -81,11 +81,13 @@ const typeDefs = gql`
     batches: [String]
     sems(batch: String): [String]
     subs(batch: String, sem: Int): [Subject]
+    student(usn: String): [Student]
   }
 `;
 
 const resolvers = {
   Query: {
+    student: (parent, data) => Student.find({ usn: data.usn }),
     subs: (parent, data) => {
       var promise = new Promise((resolve, reject) => {
         Student.find({ batch: data.batch, sem: data.sem })
