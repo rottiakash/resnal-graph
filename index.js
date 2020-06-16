@@ -87,7 +87,10 @@ const typeDefs = gql`
 
 const resolvers = {
   Query: {
-    student: (parent, data) => Student.find({ usn: data.usn }),
+    student: (parent, data) => {
+      filterSubs = false;
+      return Student.find({ usn: data.usn });
+    },
     subs: (parent, data) => {
       var promise = new Promise((resolve, reject) => {
         Student.find({ batch: data.batch, sem: data.sem })
