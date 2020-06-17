@@ -106,7 +106,7 @@ def getCredit(subcode):
         return 0
 
 
-book = xlrd.open_workbook("./2016-6th.xlsx")
+book = xlrd.open_workbook("./2016-5th.xlsx")
 first_sheet = book.sheet_by_index(0)
 i = 2
 result = []
@@ -117,25 +117,22 @@ while True:
     batch = 2016
     sec = first_sheet.cell_value(i, 2)
     name = first_sheet.cell_value(i, 0)
-    sem = 6
+    sem = 5
     subs = [
-        {"name": "Cryptography, Network Security and Cyber Law", "code": "15CS61"},
-        {"name": "Computer Graphics and Visualization", "code": "15CS62"},
-        {"name": "System Software and Compiler Design", "code": "15CS63"},
-        {"name": "Operating Systems", "code": "15CS64"},
-        {"name": "Data Mining and Data Warehousing", "code": "15CS651"},
-        {"name": "Operations research", "code": "15CS653"},
-        {"name": "Python Application Programming", "code": "15CS664"},
-        {
-            "name": "System Software and Operating System -- Laboratory",
-            "code": "15CSL67",
-        },
-        {"name": "Computer Graphics Laboratory with mini project", "code": "15CSL68"},
-        {"name": "Value engineering", "code": "15IM663"},
-        {"name": "Linear Algebra", "code": "15MAT661"},
+        {"name": "Management and Entrepreneurship for IT Industry", "code": "15CS51"},
+        {"name": "Computer Networks", "code": "15CS52"},
+        {"name": "Database Management System", "code": "15CS53"},
+        {"name": "Automata theory and Computability", "code": "15CS54"},
+        {"name": "Advanced JAVA and J2EE", "code": "15CS553"},
+        {"name": "Artificial Intelligence", "code": "15CS562",},
+        {"name": "Dot Net Framework for Application Development", "code": "15CS564"},
+        {"name": "Computer Network Laboratory", "code": "15CSL57"},
+        {"name": "DBMS Laboratory with mini project", "code": "15CSL58"},
+        {"name": "Energy and Environment", "code": "15ME562"},
+        {"name": "Laser Physics and Non-Linear Optics", "code": "15PHY561"},
     ]
     d = {"usn": USN, "name": name, "batch": batch, "sec": sec, "sem": sem, "marks": []}
-    for j in range(0, 10):
+    for j in range(0, 11):
         increment = 4 * j
         try:
             ia = int(first_sheet.cell_value(i, 3 + increment))
@@ -158,9 +155,11 @@ while True:
     result.append(d)
     i += 1
 print("Done")
+result = list(filter(lambda x: not len(x["marks"]) == 0, result))
 print(json.dumps(result, indent=4))
-# Mongo Part
 
+
+# Mongo Part
 for s in result:
     USN = s["usn"]
     print("USN:-" + USN)
