@@ -119,15 +119,17 @@ const resolvers = {
     sems: (parent, data) => {
       var promise = new Promise((resolve, reject) => {
         var sems = [];
-        Student.find({ batch: data.batch }).exec((err, docs) => {
-          docs.map((doc) => sems.push(doc.sem));
-          sems = [...new Set(sems)];
-          resolve(sems);
-        });
+        Student.find({ batch: data.batch })
+          .sort("sem")
+          .exec((err, docs) => {
+            docs.map((doc) => sems.push(doc.sem));
+            sems = [...new Set(sems)];
+            resolve(sems);
+          });
       });
       return promise;
     },
-    batches: (parent, data) => batches,
+    batches: (parent, data) => batches.sort(),
     batchResult: (parent, data) => {
       var query;
       filterSubs = false;
